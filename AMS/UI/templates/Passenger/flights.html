@@ -1,0 +1,175 @@
+{% extends "passenger/layout_passenger.html" %}
+{% block content %}
+<h2 class="text-3xl font-bold mb-8 tracking-tight">✈ Available Flights</h2>
+{% for flight in flights %}
+<div class="bg-white p-6 rounded-2xl shadow-md mb-5 flex justify-between items-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+
+  <div class="space-y-1">
+    <p class="text-xl font-bold text-gray-800">Flight {{ flight.flight_no }}</p>
+
+    <p class="text-sm text-gray-500">
+      {{ flight.departure }} → {{ flight.arrival }}
+    </p>
+
+    <p class="text-sm text-gray-500">
+      🕒 {{ flight.departure_time }} → {{ flight.arrival_time }}
+    </p>
+
+    <p class="text-sm mt-1">
+      💰 <span class="font-semibold">{{ flight.price }}</span>
+    </p>
+  </div>
+
+  <button onclick="openModal(
+      '{{ flight.flight_no }}',
+      '{{ flight.departure }}',
+      '{{ flight.arrival }}',
+      '{{ flight.departure_time }}',
+      '{{ flight.arrival_time }}',
+      '{{ flight.price }}'
+    )" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition">
+    Book
+  </button>
+</div>
+{% endfor %}
+
+<div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative animate-scale-in">
+    <button onclick="closeModal()" class="absolute top-3 right-4 text-gray-400 hover:text-black text-xl">
+      ✖
+    </button>
+
+    <h3 class="text-2xl font-bold mb-4 text-center">Confirm Booking</h3>
+    
+    <div class="space-y-1 mb-4 text-sm text-gray-700">
+      <p><b>Flight:</b> <span id="mFlightNo"></span></p>
+      <p><b>Route:</b> <span id="mRoute"></span></p>
+      <p><b>Time:</b> <span id="mTime"></span></p>
+      <p><b>Price:</b> <span id="mPrice"></span></p>
+      <p id="departedBadge" class="hidden mt-2"></p>
+    </div>
+
+    <div id="legsContainer" class="space-y-3 mb-4 max-h-44 overflow-y-auto pr-2"></div>
+
+    <form method="POST" action="{{ url_for('passenger.passenger_flights') }}">
+      <input type="hidden" name="flight_no" id="mFlightNoInput">
+      <input name="seat_no" required placeholder="Seat (e.g. 12A)" class="w-full border rounded-lg px-3 py-2 mb-3">
+      <select name="flight_type" required class="w-full border rounded-lg px-3 py-2 mb-4">
+        <option value="Economy">Economy</option>
+        <option value="Business">Business</option>
+        <option value="First">First</option>
+      </select>
+      <button id="confirmBtn"
+        class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-semibold transition">
+        Confirm Booking
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.95);
+      opacity: 0
+    }
+
+    to {
+      transform: scale(1);
+      opacity: 1
+    }
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.25s ease-out;
+  }
+
+  .departed {
+    color: #dc2626;
+    font-weight: 700;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.4
+    }
+    50% {
+      opacity: 1
+    }
+    100% {
+      opacity: 0.4
+    }
+  }
+
+  #legsContainer::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #legsContainer::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+</style>
+<script>
+  function openModal(flightNo, dep, arr, depTime, arrTime, price) 
+  {
+    document.getElementById("bookingModal").classList.remove("hidden");
+    document.getElementById("mFlightNo").innerText = flightNo;
+    document.getElementById("mRoute").innerText = dep + " → " + arr;
+    document.getElementById("mTime").innerText = depTime + " → " + arrTime;
+    document.getElementById("mPrice").innerText = price;
+    document.getElementById("mFlightNoInput").value = flightNo;
+    const depDate = new Date(depTime);
+    const now = new Date();
+    const badge = document.getElementById("departedBadge");
+    const confirmBtn = document.getElementById("confirmBtn");
+    if (depDate < now) 
+    {
+      badge.innerHTML = "🛫 DEPARTED";
+      badge.className = "departed";
+      badge.classList.remove("hidden");
+      confirmBtn.disabled = true;
+      confirmBtn.innerText = "Flight Departed";
+      confirmBtn.classList.remove("bg-green-600", "hover:bg-green-700");
+      confirmBtn.classList.add("bg-gray-400", "cursor-not-allowed");
+    } 
+    else 
+    {
+      badge.classList.add("hidden");
+      confirmBtn.disabled = false;
+      confirmBtn.innerText = "Confirm Booking";
+      confirmBtn.classList.remove("bg-gray-400", "cursor-not-allowed");
+      confirmBtn.classList.add("bg-green-600", "hover:bg-green-700");
+    }
+    document.getElementById("legsContainer").innerHTML =
+      "<p class='text-sm text-gray-500'>Loading legs...</p>";
+    fetch(`/passenger/flight/${flightNo}/legs`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.length) 
+        {
+          document.getElementById("legsContainer").innerHTML =
+            "<p class='text-sm text-red-500'>No legs found</p>";
+          return;
+        }
+        let html = "<h4 class='font-semibold'>Flight Legs</h4>";
+        data.forEach((leg, i) => {
+          html += `
+          <div class="border-l-4 border-blue-600 pl-3 text-sm">
+            <b>Leg ${i + 1}</b><br>
+            ${leg.from_airport} → ${leg.to_airport}<br>
+            🕒 ${leg.departure_time} → ${leg.arrival_time}
+          </div>`;
+        });
+        document.getElementById("legsContainer").innerHTML = html;
+      });
+  }
+
+  function closeModal() 
+  {
+    document.getElementById("bookingModal").classList.add("hidden");
+  }
+</script>
+{% endblock %}

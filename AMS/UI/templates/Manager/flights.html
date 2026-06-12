@@ -1,0 +1,355 @@
+{% extends "layout.html" %} {% block title %}Flights{% endblock %} {% block
+content %}
+<div>
+  <h2 class="text-2xl font-bold">Flight Management</h2>
+  <p class="text-slate-600 mt-1 space-y-6">
+    Manage flight staff, time, price and legs
+  </p>
+</div>
+
+<button id="addFlightBtn" onclick="openAddForm()"
+  class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow mb-4">
+  + Add Flight
+</button>
+<div id="flightForm" class="hidden mb-6 bg-white p-4 rounded shadow">
+  <h3 id="formTitle" class="font-semibold mb-2">Add Flight</h3>
+  <form method="POST">
+    <input type="hidden" name="action" id="formAction" value="add" />
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <input id="flight_no" name="flight_no" placeholder="Flight No" required
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+      <input id="airline" name="airline" placeholder="Airline" required
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+      <select id="aircraft_id" name="aircraft_id" required
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+        {% for ac in aircrafts %}
+        <option value="{{ ac.aircraft_id }}">{{ ac.model }}</option>
+        {% endfor %}
+      </select>
+      <input type="datetime-local" id="departure" name="departure" required
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+      <input type="datetime-local" id="arrival" name="arrival" required
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+      <input id="price" name="price" type="number" step="0.01" placeholder="Price" required
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+      <select id="status" name="status" required
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition">
+        <option>Scheduled</option>
+        <option>Delayed</option>
+        <option>Cancelled</option>
+        <option>Completed</option>
+      </select>
+    </div>
+    <h4 class="mt-4 font-semibold">Flight Legs</h4>
+    <div id="legs"></div>
+    <button type="button" onclick="addLeg()" class="text-blue-600 text-sm mb-2">
+      + Add Leg
+    </button>
+    <h4 class="mt-4 font-semibold">Assign Crew</h4>
+    <div id="employees"></div>
+    <button type="button" onclick="addEmployee()" class="text-blue-600 text-sm mb-2">
+      + Add Crew Member
+    </button>
+    <div class="mt-4 flex gap-2">
+      <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+        Save Flight
+      </button>
+      <button type="button" onclick="closeForm()" class="bg-slate-200 hover:bg-slate-300 px-6 py-2 rounded-lg">
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>
+
+<table class="min-w-full border border-gray-200 shadow rounded-lg overflow-hidden">
+  <thead class="bg-gray-900 text-white">
+    <tr>
+      <th class="table-th">Flight No</th>
+      <th class="table-th">Airline</th>
+      <th class="table-th">Aircraft</th>
+      <th class="table-th">Departure</th>
+      <th class="table-th">Arrival</th>
+      <th class="table-th">Price</th>
+      <th class="table-th">Status</th>
+      <th class="table-th">Legs</th>
+      <th class="table-th">Crew</th>
+      <th class="table-th">Actions</th>
+    </tr>
+  </thead>
+  <tbody class="bg-white divide-y divide-gray-200">
+    {% for f in flights %}
+    <tr class="hover:bg-gray-50 transition">
+      <td class="p-3 text-sm text-gray-800 font-medium">{{ f.flight_no }}</td>
+      <td class="p-3 text-sm text-gray-700">{{ f.airline }}</td>
+      <td class="p-3 text-sm text-gray-700">{{ f.aircraft_model }}</td>
+      <td class="p-3 text-sm text-gray-700">{{ f.departure }}</td>
+      <td class="p-3 text-sm text-gray-700">{{ f.arrival }}</td>
+      <td class="p-3 text-sm text-gray-700">${{ f.price }}</td>
+      <td class="p-3 text-sm">
+        <span
+          class="px-2 py-1 rounded-full text-xs font-semibold {% if f.status == 'Scheduled' %}bg-blue-200 text-blue-800 {% elif f.status == 'Delayed' %}bg-yellow-200 text-yellow-800 {% elif f.status == 'Cancelled' %}bg-red-200 text-red-800 {% elif f.status == 'Completed' %}bg-green-200 text-green-800 {% endif %}">
+          {{ f.status }}
+        </span>
+      </td>
+      <td class="p-3 text-sm">
+        <div class="flex flex-col gap-1">
+          {% for leg in flight_legs[f.flight_no] %}
+          <div class="bg-gray-100 p-1 rounded text-gray-800 text-xs">
+            {{ leg.leg_no }}: {{ leg.from_airport }} → {{ leg.to_airport }}
+          </div>
+          {% endfor %}
+        </div>
+      </td>
+      <td class="p-3 text-sm">
+        <div class="flex flex-col gap-1">
+          {% for emp in flight_employees[f.flight_no] %}
+          <div class="bg-gray-100 p-1 rounded text-gray-800 text-xs">
+            {{ emp.name }} ({{ emp.role }})
+          </div>
+          {% endfor %}
+        </div>
+      </td>
+      <td class="p-3 text-sm flex gap-1">
+        <button class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+          data-flight="{{ f.flight_no }}" data-airline="{{ f.airline }}" data-aircraft="{{ f.aircraft_id }}"
+          data-departure="{{ f.departure|replace(' ', 'T') }}" data-arrival="{{ f.arrival|replace(' ', 'T') }}"
+          data-price="{{ f.price }}" data-status="{{ f.status }}" data-legs="{{ flight_legs[f.flight_no]|tojson|safe }}"
+          data-employees="{{ flight_employees[f.flight_no]|tojson|safe }}" onclick="openEditForm(this)">
+          Edit
+        </button>
+        <form method="POST">
+          <input type="hidden" name="action" value="delete" />
+          <input type="hidden" name="flight_no" value="{{ f.flight_no }}" />
+          <button class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+            Delete
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<template id="routeTemplate">
+  <div class="leg-row flex gap-2 items-center mb-2">
+    <input type="number" name="leg_no[]" readonly class="w-20 p-2 rounded-lg border border-slate-300 text-sm" />
+    <select name="route_id[]" class="route-select p-2 rounded-lg border border-slate-300 text-sm"
+      onchange="onRouteChange(this)" required>
+      <option value="">Select Route</option>
+      {% for r in routes %}
+      <option value="{{ r.route_id }}" data-from="{{ r.from_airport }}" data-to="{{ r.to_airport }}">
+        {{ r.from_airport }} → {{ r.to_airport }}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="button" onclick="removeLeg(this)" class="text-red-600 hover:text-red-800 text-sm">
+      ✕
+    </button>
+  </div>
+</template>
+
+<template id="employeeTemplate">
+  <div class="employee-row flex gap-2 mb-2 items-center">
+    <select name="employee_id[]" required class="employee-select p-2 rounded-lg border border-slate-300 text-sm"
+      onchange="filterEmployees()">
+      <option value="">Select Employee</option>
+      {% for e in employees %}
+      <option value="{{ e.employee_id }}">{{ e.name }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="role[]" required class="p-2 rounded-lg border border-slate-300 text-sm">
+      <option>Pilot</option>
+      <option>CoPilot</option>
+      <option>AirHost</option>
+    </select>
+
+    <button type="button" onclick="removeEmployee(this)" class="text-red-600 hover:text-red-800 font-bold">
+      ✕
+    </button>
+  </div>
+</template>
+
+<script>
+  function openAddForm() {
+    document.getElementById("flightForm").classList.remove("hidden");
+    document.getElementById("formTitle").innerText = "Add Flight";
+    document.getElementById("formAction").value = "add";
+    document.getElementById("flight_no").readOnly = false;
+    document.getElementById("legs").innerHTML = "";
+    document.getElementById("employees").innerHTML = "";
+    document.getElementById("flight_no").value = "";
+    document.getElementById("airline").value = "";
+    document.getElementById("aircraft_id").selectedIndex = 0;
+    document.getElementById("departure").value = "";
+    document.getElementById("arrival").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("status").selectedIndex = 0;
+
+    addLeg();
+    addEmployee();
+  }
+
+  function openEditForm(btn) {
+    document.getElementById("flightForm").classList.remove("hidden");
+    document.getElementById("formTitle").innerText = "Edit Flight";
+    document.getElementById("formAction").value = "edit";
+    document.getElementById("flight_no").value = btn.dataset.flight;
+    document.getElementById("flight_no").readOnly = true;
+    document.getElementById("airline").value = btn.dataset.airline;
+    document.getElementById("aircraft_id").value = btn.dataset.aircraft;
+    document.getElementById("departure").value = btn.dataset.departure;
+    document.getElementById("arrival").value = btn.dataset.arrival;
+    document.getElementById("price").value = btn.dataset.price;
+    document.getElementById("status").value = btn.dataset.status;
+    const legsContainer = document.getElementById("legs");
+    const empContainer = document.getElementById("employees");
+    legsContainer.innerHTML = "";
+    empContainer.innerHTML = "";
+    const legs = JSON.parse(btn.dataset.legs || "[]");
+    legs.forEach((l) => {
+      const template = document.getElementById("routeTemplate");
+      const clone = template.content.cloneNode(true);
+      const row = clone.querySelector(".leg-row");
+      row.querySelector("input[name='leg_no[]']").value = l.leg_no;
+      const routeSelect = row.querySelector("select[name='route_id[]']");
+      routeSelect.value = l.route_id;
+      legsContainer.appendChild(clone);
+    });
+    renumberLegs();
+    const crew = JSON.parse(btn.dataset.employees || "[]");
+    crew.forEach((c) => {
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("flex", "gap-2", "mb-2");
+      const empSelect = document.createElement("select");
+      empSelect.name = "employee_id[]";
+      empSelect.required = true;
+      empSelect.classList.add("p-1", "border", "rounded");
+      const empTemplate = document
+        .getElementById("employeeTemplate")
+        .content.querySelector("select").innerHTML;
+      empSelect.innerHTML = empTemplate;
+      empSelect.value = c.employee_id;
+      const roleSelect = document.createElement("select");
+      roleSelect.name = "role[]";
+      roleSelect.required = true;
+      roleSelect.classList.add("p-1", "border", "rounded");
+      roleSelect.innerHTML = `<option>Pilot</option><option>CoPilot</option><option>AirHost</option>`;
+      roleSelect.value = c.role;
+      wrapper.appendChild(empSelect);
+      wrapper.appendChild(roleSelect);
+      empContainer.appendChild(wrapper);
+      filterEmployees();
+    });
+  }
+
+  function closeForm() {
+    document.getElementById("flightForm").classList.add("hidden");
+  }
+
+  function addLeg() {
+    const template = document.getElementById("routeTemplate");
+    const clone = template.content.cloneNode(true);
+    document.getElementById("legs").appendChild(clone);
+    renumberLegs();
+  }
+
+  function removeLeg(btn) {
+    const row = btn.closest(".leg-row");
+    const container = document.getElementById("legs");
+    while (row.nextSibling) {
+      row.nextSibling.remove();
+    }
+    row.remove();
+    renumberLegs();
+  }
+  function removeEmployee(btn) {
+    btn.closest(".employee-row").remove();
+    filterEmployees();
+  }
+  function filterEmployees() {
+    const selected = Array.from(document.querySelectorAll(".employee-select"))
+      .map((s) => s.value)
+      .filter((v) => v !== "");
+
+    document.querySelectorAll(".employee-select").forEach((select) => {
+      const current = select.value;
+
+      Array.from(select.options).forEach((opt) => {
+        if (!opt.value) return;
+
+        if (opt.value !== current && selected.includes(opt.value)) {
+          opt.disabled = true;
+        } else {
+          opt.disabled = false;
+        }
+      });
+    });
+  }
+
+  function onRouteChange(selectEl) {
+    const selectedOption = selectEl.options[selectEl.selectedIndex];
+    if (!selectedOption || !selectedOption.dataset.to) return;
+    const toAirport = selectedOption.dataset.to;
+    const currentRow = selectEl.closest(".leg-row");
+    while (currentRow.nextSibling) {
+      currentRow.nextSibling.remove();
+    }
+    const selectedRoutes = Array.from(
+      document.querySelectorAll("select[name='route_id[]']")
+    ).map((s) => s.value);
+    fetch(`/manager/routes/from/${toAirport}`)
+      .then((res) => res.json())
+      .then((routes) => {
+        const availableRoutes = routes.filter(
+          (r) => !selectedRoutes.includes(String(r.route_id))
+        );
+        if (availableRoutes.length === 0) return;
+        const template = document.getElementById("routeTemplate");
+        const clone = template.content.cloneNode(true);
+        const newSelect = clone.querySelector("select");
+        newSelect.innerHTML = `<option value="">Select Route</option>`;
+        availableRoutes.forEach((r) => {
+          const opt = document.createElement("option");
+          opt.value = r.route_id;
+          opt.dataset.to = r.to;
+          opt.textContent = `${toAirport} → ${r.to}`;
+          newSelect.appendChild(opt);
+        });
+        document.getElementById("legs").appendChild(clone);
+        renumberLegs();
+      });
+  }
+
+  function renumberLegs() {
+    document.querySelectorAll(".leg-row").forEach((row, index) => {
+      row.querySelector("input[name='leg_no[]']").value = index + 1;
+    });
+  }
+  function addEmployee(emp_id = "", role = "") {
+    const template = document.getElementById("employeeTemplate");
+    const clone = template.content.cloneNode(true);
+
+    document.getElementById("employees").appendChild(clone);
+
+    const lastRow = document.querySelectorAll(".employee-row");
+    const row = lastRow[lastRow.length - 1];
+
+    if (emp_id)
+      row.querySelector("select[name='employee_id[]']").value = emp_id;
+    if (role) row.querySelector("select[name='role[]']").value = role;
+
+    filterEmployees();
+  }
+</script>
+<style>
+  .table-th {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+</style>
+{% endblock %}

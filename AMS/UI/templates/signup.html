@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Passenger Signup | AeroLink</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .floating-label input:focus+label,
+    .floating-label input:not(:placeholder-shown)+label {
+      transform: translateY(-1.1rem);
+      font-size: 0.75rem;
+      color: #2563eb;
+    }
+
+    .floating-label label {
+      position: absolute;
+      left: 0.75rem;
+      top: 0.85rem;
+      background: white;
+      padding: 0 0.25rem;
+      color: #94a3b8;
+      pointer-events: none;
+      transition: all 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(30px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .animate-slide-in {
+      animation: slideIn 0.4s ease-out;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex flex-col">
+  <header class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-center gap-3">
+      <img src="{{ url_for('static', filename='Images/logo.png') }}" alt="AeroLink Logo"
+        class="h-10 w-10 bg-white rounded-xl p-1 shadow-md" />
+      <div class="flex flex-col leading-none text-center">
+        <h1 class="text-xl font-extrabold tracking-wide">AeroLink</h1>
+        <span class="text-blue-200 text-xs tracking-wide">
+          Smart Flight Network
+        </span>
+      </div>
+    </div>
+  </header>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div id="flash-messages" class="fixed top-24 right-6 space-y-3 z-50">
+    {% for category, message in messages %}
+    <div class="px-5 py-3 rounded-xl shadow-xl text-white animate-slide-in
+    {{ 'bg-emerald-600' if category == 'success' else 'bg-rose-600' }}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  <main class="flex-grow flex justify-center items-center p-6">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+      <h2 class="text-2xl font-extrabold text-center text-slate-800 mb-2">
+        Passenger Sign Up
+      </h2>
+      <p class="text-center text-slate-500 mb-6 text-sm">
+        Create your account to book flights easily ✈
+      </p>
+      <form method="POST" action="/signup" class="space-y-4">
+        <div class="relative floating-label">
+          <input name="name" type="text" placeholder=" " required class="block w-full p-3 border border-slate-300 rounded-lg
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          <label>Full Name</label>
+        </div>
+
+        <div class="relative floating-label">
+          <input name="password" type="password" placeholder=" " required class="block w-full p-3 border border-slate-300 rounded-lg
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          <label>Password</label>
+        </div>
+
+        <div class="relative floating-label">
+          <input name="cnic" type="text" placeholder=" " required pattern="\d{5}-\d{7}-\d{1}"
+            title="CNIC format: 12345-1234567-1" class="block w-full p-3 border border-slate-300 rounded-lg
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          <label>CNIC (XXXXX-XXXXXXX-X)</label>
+        </div>
+
+        <div class="relative floating-label">
+          <input name="phone" type="text" placeholder=" " required pattern="03\d{9}|\+92\d{10}"
+            title="Phone must start with 03XXXXXXXXX or +92XXXXXXXXX" class="block w-full p-3 border border-slate-300 rounded-lg
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          <label>Phone (03XXXXXXXXX or +92XXXXXXXXX)</label>
+        </div>
+
+        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow transition">
+          Create Account
+        </button>
+      </form>
+
+      <p class="mt-5 text-center text-slate-600 text-sm">
+        Already have an account?
+        <a href="/login" class="text-blue-600 font-semibold hover:underline">
+          Login
+        </a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="bg-slate-900 text-slate-400 py-4 text-center text-sm">
+    © 2024–2028
+    <span class="text-white font-semibold">AeroLink</span>
+    • Smart Flight Network
+  </footer>
+</body>
+
+</html>
+<script>
+  setTimeout(() => {
+    const flash = document.getElementById("flash-messages");
+    if (flash) {
+      flash.classList.add("opacity-0", "transition-opacity", "duration-500");
+      setTimeout(() => flash.remove(), 500);
+    }
+  }, 3000);
+</script>

@@ -1,0 +1,96 @@
+{% extends "passenger/layout_passenger.html" %}
+{% block content %}
+
+<h2 class="text-3xl font-extrabold mb-8 text-slate-800 tracking-tight">
+  🎟️ My Boarding Passes
+</h2>
+
+{% if bookings|length == 0 %}
+<div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl">
+  You have no active bookings.
+</div>
+{% endif %}
+
+<div class="grid lg:grid-cols-2 gap-8">
+  {% for b in bookings %}
+  <div class="relative bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+      <div>
+        <p class="text-xs uppercase tracking-widest text-blue-200">
+          Boarding Pass
+        </p>
+        <p class="text-2xl font-bold">{{ b.flight_no }}</p>
+      </div>
+      <span class="px-3 py-1 bg-emerald-500/90 rounded-full text-xs font-semibold">
+        Confirmed
+      </span>
+    </div>
+    <div class="p-6 grid grid-cols-2 gap-6 text-sm">
+      <div>
+        <p class="text-slate-500 uppercase text-xs">From</p>
+        <p class="text-lg font-semibold text-slate-800">{{ b.departure }}</p>
+      </div>
+      
+      <div>
+        <p class="text-slate-500 uppercase text-xs">To</p>
+        <p class="text-lg font-semibold text-slate-800">{{ b.arrival }}</p>
+      </div>
+
+      <div>
+        <p class="text-slate-500 uppercase text-xs">Seat</p>
+        <p class="text-lg font-semibold">{{ b.seat_no }}</p>
+      </div>
+
+      <div>
+        <p class="text-slate-500 uppercase text-xs">Class</p>
+        <p class="text-lg font-semibold">{{ b.flight_type }}</p>
+      </div>
+
+      <div class="col-span-2">
+        <p class="text-slate-500 uppercase text-xs">Departure Countdown</p>
+        <p class="text-indigo-600 font-semibold countdown" data-time="{{ b.departure }}">
+        </p>
+      </div>
+    </div>
+    <div class="border-t border-dashed border-slate-300"></div>
+    <div class="p-6 flex justify-between items-center bg-slate-50">
+      <a href="/passenger/booking/{{ b.ticket_id }}/pdf"
+        class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">
+        🧾 Download Ticket
+      </a>
+
+      <form method="POST" action="/passenger/booking/{{ b.ticket_id }}/cancel"
+        onsubmit="return confirm('Cancel this booking?')">
+        <button class="px-4 py-2 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition">
+          ❌ Cancel
+        </button>
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  document.querySelectorAll(".countdown").forEach(el => {
+    const departure = new Date(el.dataset.time);
+
+    function update() {
+      const diff = departure - new Date();
+      if (diff <= 0) {
+        el.innerText = "🛫 Departed";
+        el.classList.remove("text-indigo-600");
+        el.classList.add("text-slate-500");
+        return;
+      }
+      const h = Math.floor(diff / 36e5);
+      const m = Math.floor((diff % 36e5) / 6e4);
+      el.innerText = `🕒 Departs in ${h}h ${m}m`;
+    }
+
+    update();
+    setInterval(update, 60000);
+  });
+</script>
+
+{% endblock %}

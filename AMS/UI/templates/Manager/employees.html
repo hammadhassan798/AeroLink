@@ -1,0 +1,173 @@
+{% extends "layout.html" %}
+{% block title %}Employees{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div>
+    <h2 class="text-3xl font-bold text-slate-900">Employee Management</h2>
+    <p class="text-slate-600 mt-1">
+      Manage airline staff, roles and assignments
+    </p>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-start gap-3">
+    <button onclick="openAddForm()"
+      class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow">
+      + Add Employee
+    </button>
+
+    <div class="flex flex-wrap gap-2">
+      <form method="POST" action="{{ url_for('manager.undo') }}">
+        <button class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm">
+          Undo
+        </button>
+      </form>
+
+      <form method="POST" action="{{ url_for('manager.redo') }}">
+        <button class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm">
+          Redo
+        </button>
+      </form>
+      </div>
+      <div class="flex-grow flex justify-center">
+      <form method="GET">
+        <input type="hidden" name="sort" value="experience">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm justify-end">
+          Sort by Experience
+        </button>
+      </form>
+       </div>
+      <div class="flex-grow flex justify-end">
+      <form method="GET" class="flex gap-2 justify-end">
+        <input type="text" name="search" placeholder="Search employee..." value="{{ request.args.get('search','') }}"
+          class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/30 focus:outline-none">
+        <button class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm">
+          Search
+        </button>
+      </form>
+      </div>
+   
+  </div>
+
+  <div id="employeeForm" class="hidden bg-white rounded-xl shadow-sm border p-6">
+    <h3 id="formTitle" class="text-xl font-semibold text-slate-800 mb-4">
+      Add Employee
+    </h3>
+
+    <form method="POST">
+      <input type="hidden" name="action" id="formAction" value="add">
+      <input type="hidden" name="employee_id" id="employee_id">
+
+      <div class="grid md:grid-cols-3 gap-4">
+        {% for field in ['name','cnic','phone','username'] %}
+        <input id="{{ field }}" name="{{ field }}" placeholder="{{ field|capitalize }}"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+        {% endfor %}
+
+        <select id="role" name="role" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option>Pilot</option>
+          <option>CoPilot</option>
+          <option>AirHost</option>
+          <option>GroundStaff</option>
+        </select>
+
+        <input id="experience_years" name="experience_years" type="number" min="0" placeholder="Experience (Years)"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <select id="current_airport" name="current_airport"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option value="">Select Airport</option>
+          {% for airport in airports %}
+          <option value="{{ airport.airport_code }}">{{ airport.name }}</option>
+          {% endfor %}
+        </select>
+        <input id="password" name="password" type="password" placeholder="Password"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      </div>
+      <div class="mt-5 flex gap-3">
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+          Save
+        </button>
+        <button type="button" onclick="closeForm()" class="bg-slate-200 hover:bg-slate-300 px-6 py-2 rounded-lg">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-800 text-slate-100">
+        <tr>
+          {% for h in ["Name","CNIC","Phone","Role","Experience","Airport","Username","Actions"] %}
+          <th class="p-3 text-center font-semibold">{{ h }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for emp in employees %}
+        <tr class="border-t hover:bg-slate-50 text-center">
+          <td class="p-3 font-medium">{{ emp.name }}</td>
+          <td class="p-3">{{ emp.cnic }}</td>
+          <td class="p-3">{{ emp.phone }}</td>
+          <td class="p-3">{{ emp.role }}</td>
+          <td class="p-3">{{ emp.experience_years }}</td>
+          <td class="p-3">{{ emp.airport_name }}</td>
+          <td class="p-3">{{ emp.username }}</td>
+          <td class="p-3 flex justify-center gap-2">
+            <button onclick="openEditForm(this)"
+              class="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1.5 rounded-md text-xs"
+              data-id="{{ emp.employee_id }}" data-name="{{ emp.name }}" data-cnic="{{ emp.cnic }}"
+              data-phone="{{ emp.phone }}" data-role="{{ emp.role }}" data-experience="{{ emp.experience_years }}"
+              data-airport="{{ emp.current_airport }}" data-username="{{ emp.username }}">
+              Edit
+            </button>
+            <form method="POST">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="employee_id" value="{{ emp.employee_id }}">
+              <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-xs">
+                Delete
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function openAddForm() {
+    document.getElementById("employeeForm").classList.remove("hidden");
+    document.getElementById("formTitle").innerText = "Add Employee";
+    document.getElementById("formAction").value = "add";
+    document.getElementById("employee_id").value = "";
+    document.getElementById("name").value = "";
+    document.getElementById("cnic").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("role").value = "Pilot";
+    document.getElementById("experience_years").value = "";
+    document.getElementById("current_airport").selectedIndex = 0;
+    document.getElementById("username").value = "";
+    document.getElementById("password").value = "";
+  }
+
+  function openEditForm(btn) {
+    document.getElementById("employeeForm").classList.remove("hidden");
+    document.getElementById("formTitle").innerText = "Edit Employee";
+    document.getElementById("formAction").value = "edit";
+    document.getElementById("employee_id").value = btn.dataset.id;
+    document.getElementById("name").value = btn.dataset.name;
+    document.getElementById("cnic").value = btn.dataset.cnic;
+    document.getElementById("phone").value = btn.dataset.phone;
+    document.getElementById("role").value = btn.dataset.role;
+    document.getElementById("experience_years").value = btn.dataset.experience;
+    document.getElementById("current_airport").value = btn.dataset.airport;
+    document.getElementById("username").value = btn.dataset.username;
+    document.getElementById("password").value = "";
+  }
+
+  function closeForm() {
+    document.getElementById("employeeForm").classList.add("hidden");
+  }
+</script>
+{% endblock %}

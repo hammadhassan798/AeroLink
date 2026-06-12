@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | SkyHigh</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    .floating-label input:focus+label,
+    .floating-label input:not(:placeholder-shown)+label {
+      transform: translateY(-1.1rem);
+      font-size: 0.75rem;
+      color: #2563eb;
+    }
+
+    .floating-label label {
+      position: absolute;
+      left: 0.75rem;
+      top: 0.75rem;
+      background: white;
+      padding: 0 0.25rem;
+      color: #9ca3af;
+      pointer-events: none;
+      transition: all 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-10px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .animate-slide {
+      animation: slideIn 0.4s ease-out;
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen flex flex-col">
+
+  <header class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-center gap-3">
+      <img src="{{ url_for('static', filename='Images/logo.png') }}" alt="AeroLink Logo"
+        class="h-10 w-10 bg-white rounded-xl p-1 shadow-md" />
+      <div class="flex flex-col leading-none text-center">
+        <h1 class="text-xl font-extrabold tracking-wide">AeroLink</h1>
+        <span class="text-blue-200 text-xs tracking-wide">
+          Smart Flight Network
+        </span>
+      </div>
+    </div>
+  </header>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div id="flash-box" class="fixed top-24 right-6 space-y-3 z-50">
+    {% for category, message in messages %}
+    <div class="animate-slide px-5 py-3 rounded-xl shadow-xl text-white
+      {{ 'bg-emerald-600' if category == 'success' else 'bg-rose-600' }}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <main class="flex-grow flex items-center justify-center px-4">
+    <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 w-full max-w-md">
+
+      <h2 class="text-3xl font-extrabold text-center text-slate-800 mb-2">
+        Welcome Back
+      </h2>
+      <p class="text-center text-slate-500 mb-6">
+        Login to your SkyHigh account ✈
+      </p>
+
+      <form method="POST" action="/login" class="space-y-5">
+
+        <div class="relative floating-label">
+          <input name="cnic" type="text" placeholder=" " required pattern="\d{5}-\d{7}-\d{1}" class="w-full p-4 border rounded-lg focus:outline-none
+                   focus:ring-2 focus:ring-blue-600 focus:border-blue-600" />
+          <label>CNIC (XXXXX-XXXXXXX-X)</label>
+        </div>
+
+        <div class="relative floating-label">
+          <input name="password" type="password" placeholder=" " required class="w-full p-4 border rounded-lg focus:outline-none
+                   focus:ring-2 focus:ring-blue-600 focus:border-blue-600" />
+          <label>Password</label>
+        </div>
+
+        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                 py-3 rounded-xl shadow-lg transition">
+          Login
+        </button>
+      </form>
+      <p class="mt-6 text-center text-slate-600 text-sm">
+        Don’t have an account?
+        <a href="/signup" class="text-blue-600 font-semibold hover:underline">
+          Sign Up
+        </a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="bg-slate-900 text-slate-400 py-4 text-center text-sm">
+    © 2024–2028
+    <span class="text-white font-semibold">AeroLink</span>
+    • Smart Flight Network
+  </footer>
+</body>
+
+</html>
+<script>
+  setTimeout(() => {
+    const flash = document.getElementById("flash-box");
+    if (flash) {
+      flash.classList.add("opacity-0", "transition-opacity", "duration-500");
+      setTimeout(() => flash.remove(), 500);
+    }
+  }, 3000);
+</script>

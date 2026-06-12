@@ -1,0 +1,102 @@
+{% extends "layout.html" %} {% block title %}Airport Management{% endblock %} {%
+block content %}
+<div class="space-y-6">
+    <div>
+        <h2 class="text-3xl font-bold text-slate-900">Airport Management</h2>
+        <p class="text-slate-600 mt-1">
+            Manage airport locations and basic information
+        </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+        <a href="{{ url_for('manager.airports', add=1) }}"
+            class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow">
+            + Add Airport
+        </a>
+        <div class="flex-grow flex justify-end">
+            <form method="GET" class="flex gap-2 justify-end">
+                <input type="text" name="search" placeholder="Search airport..."
+                    value="{{ request.args.get('search','') }}"
+                    class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    Search
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if edit_airport or request.args.get('add') %}
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+        <h3 class="text-xl font-semibold text-slate-800 mb-4">
+            {{ "Edit Airport" if edit_airport else "Add New Airport" }}
+        </h3>
+        <form method="POST">
+            <input type="hidden" name="action" value="{{ 'edit' if edit_airport else 'add' }}" />
+
+            <div class="grid md:grid-cols-4 gap-4">
+                <input name="airport_code" placeholder="Code" value="{{ edit_airport.airport_code if edit_airport }}" {%
+                    if edit_airport %}readonly{% endif %} required
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition disabled:bg-slate-100 disabled:text-slate-500" />
+
+                <input name="name" placeholder="Airport Name" value="{{ edit_airport.name if edit_airport }}" required
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+
+                <input name="city" placeholder="City" value="{{ edit_airport.city if edit_airport }}" required
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+
+                <input name="country" placeholder="Country" value="{{ edit_airport.country if edit_airport }}" required
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition" />
+            </div>
+
+            <div class="mt-5 flex gap-3">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                    {{ "Update" if edit_airport else "Add Airport" }}
+                </button>
+                <a href="{{ url_for('manager.airports') }}"
+                    class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-5 py-2 rounded-lg">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-800 text-slate-100">
+                <tr>
+                    <th class="p-3 text-center">Code</th>
+                    <th class="p-3 text-center">Name</th>
+                    <th class="p-3 text-center">City</th>
+                    <th class="p-3 text-center">Country</th>
+                    <th class="p-3 text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for airport in airports %}
+                <tr class="border-t hover:bg-slate-50 text-center">
+                    <td class="p-3 font-medium">{{ airport.airport_code }}</td>
+                    <td class="p-3">{{ airport.name }}</td>
+                    <td class="p-3">{{ airport.city }}</td>
+                    <td class="p-3">{{ airport.country }}</td>
+                    <td class="p-3 flex justify-center gap-2">
+                        <a href="{{ url_for('manager.airports', edit=airport.airport_code) }}"
+                            class="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1.5 rounded-md">
+                            Edit
+                        </a>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="delete" />
+                            <input type="hidden" name="airport_code" value="{{ airport.airport_code }}" />
+                            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

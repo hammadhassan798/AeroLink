@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block title %}Manager Dashboard{% endblock %}
+{% block content %}
+
+<div class="mb-8">
+  <h2 class="text-3xl font-semibold text-gray-900">
+    Welcome back 👋
+  </h2>
+  <p class="text-gray-500 mt-1">
+    Manage AeroLink operations at a glance
+  </p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+  <a href="{{ url_for('manager.airports') }}"
+    class="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-blue-500 transition">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-gray-500">Airports</span>
+      <span class="text-blue-500 text-xl">🛬</span>
+    </div>
+    <p class="text-3xl font-semibold text-gray-900 mt-4">
+      {{ total_airports }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">
+      Manage airport data
+    </p>
+  </a>
+
+  <a href="{{ url_for('manager.routes') }}"
+    class="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-green-500 transition">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-gray-500">Routes</span>
+      <span class="text-green-500 text-xl">🗺️</span>
+    </div>
+    <p class="text-3xl font-semibold text-gray-900 mt-4">
+      {{ total_routes }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">
+      Distances & timings
+    </p>
+  </a>
+
+  <a href="{{ url_for('manager.flights') }}"
+    class="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-purple-500 transition">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-gray-500">Flights</span>
+      <span class="text-purple-500 text-xl">✈️</span>
+    </div>
+    <p class="text-3xl font-semibold text-gray-900 mt-4">
+      {{ total_flights }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">
+      Scheduling & status
+    </p>
+  </a>
+
+  <a href="{{ url_for('manager.employees') }}"
+    class="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-yellow-500 transition">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-gray-500">Employees</span>
+      <span class="text-yellow-500 text-xl">👨‍✈️</span>
+    </div>
+    <p class="text-3xl font-semibold text-gray-900 mt-4">
+      {{ total_employees }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">
+      Crew & staff
+    </p>
+  </a>
+
+</div>
+{% endblock %}
